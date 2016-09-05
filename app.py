@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 import os, sys, json
 
 if len(sys.argv) >= 2:
@@ -16,28 +16,29 @@ app = Flask(__name__)
 from docker import Client
 cli = Client(base_url='unix://var/run/docker.sock')
 
+@app.route('/js/<path:path>')
+def send_js(path):
+    return send_from_directory('static/js', path)
+
+@app.route('/css/<path:path>')
+def send_css(path):
+    return send_from_directory('static/css', path)
+
 @app.route('/')
 def hello_world():
-    ret = "<html>\n"
-    ret += "<body>\n"
-    ret += "  <h1>Hello, " + message + "!</h1>\n"
-    ret += "  <h3>This is my environment:</h3>\n"
-    ret += "  <table>\n"
-    ret += "    <tr><th>Key</th><th>Value</th></tr>\n"
+    return send_from_directory('static', 'index.html')
 
-    keys = list(os.environ.keys())
-    keys.sort()
-    for k in keys:
-        ret += "    <tr><td>" + k + "</td><td>" + os.environ[k] + "</td></tr>\n"
+@app.route('/containers')
+def container_info():
+    return json.dumps(cli.containers(), sort_keys=True, indent=4)
 
-    ret += "  </table>\n"
-    ret += "  <h3>Containers</h3>\n"
-    ret += "  <pre>" + json.dumps(cli.containers(), sort_keys=True, indent=4) + "</pre>\n"
-    ret += "  <h3>Info</h3>\n"
-    ret += "  <pre>" + json.dumps(cli.info(), sort_keys=True, indent=4) + "</pre>\n"
-    ret += "</body>\n"
-    ret += "</html>\n"
-    return ret
+@app.route('/info')
+def docker_info():
+    return json.dumps(cli.info(), sort_keys=True, indent=4)
+
+@app.route('/services')
+def docker_services():
+    return json.dumps(cli.services(), sort_keys=True, indent=4)
 
 if __name__ == '__main__':
     app.run(debug=True,host='0.0.0.0', port=port)
