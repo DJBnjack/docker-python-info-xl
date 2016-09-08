@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, jsonify
 import os, sys, json
 
 if len(sys.argv) >= 2:
@@ -30,15 +30,16 @@ def hello_world():
 
 @app.route('/containers')
 def container_info():
-    return json.dumps(cli.containers(), sort_keys=True, indent=4)
+    return jsonify(containers = cli.containers())
 
 @app.route('/info')
 def docker_info():
-    return json.dumps(cli.info(), sort_keys=True, indent=4)
+    return jsonify(info = cli.info())
+
 
 @app.route('/services')
 def docker_services():
-    return json.dumps(cli.services(), sort_keys=True, indent=4)
+    return jsonify(services = cli.services())
 
 if __name__ == '__main__':
     app.run(debug=True,host='0.0.0.0', port=port)
